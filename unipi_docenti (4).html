@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docenti UniPi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f3ee;--surface:#fff;--surface2:#f0ede6;--border:#ddd9d0;
+  --text:#1a1814;--muted:#6b6760;--faint:#a09c96;
+  --accent:#003c72;
+  --radius:10px;--shadow:0 2px 12px rgba(0,0,0,.07);
+  --t1-bg:#dbeafe;--t1-fg:#1e40af;
+  --t2-bg:#d1fae5;--t2-fg:#065f46;
+  --t3-bg:#fef3c7;--t3-fg:#92400e;
+  --t4-bg:#ede9fe;--t4-fg:#5b21b6;
+  --t5-bg:#fce7f3;--t5-fg:#9d174d;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#14120e;--surface:#1e1c18;--surface2:#28261f;--border:#3a3830;
+  --text:#f0ede6;--muted:#9e9a92;--faint:#5e5c56;--accent:#5b9bd5;
+  --t1-bg:#1e3a5f;--t1-fg:#93c5fd;--t2-bg:#064e3b;--t2-fg:#6ee7b7;
+  --t3-bg:#78350f;--t3-fg:#fde68a;--t4-bg:#3b0764;--t4-fg:#c4b5fd;
+  --t5-bg:#500724;--t5-fg:#fbcfe8;
+}}
+html{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;min-height:100vh}
+.page{max-width:960px;margin:0 auto;padding:48px 24px 80px}
+.logo-row{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.logo-mark{width:36px;height:36px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.logo-mark span{color:#fff;font-family:'EB Garamond',serif;font-size:18px}
+.logo-text{font-size:13px;color:var(--muted);line-height:1.3}
+.logo-text strong{color:var(--text);font-weight:500;display:block;font-size:14px}
+h1{font-family:'EB Garamond',serif;font-size:clamp(28px,5vw,42px);font-weight:400;line-height:1.15;margin-bottom:10px}
+h1 em{font-style:italic;color:var(--accent)}
+.subtitle{font-size:14px;color:var(--muted)}
+.divider{height:1px;background:var(--border);margin:32px 0}
+.search-wrap{position:relative;margin-bottom:8px}
+.si{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--faint);pointer-events:none}
+#cs{width:100%;padding:13px 14px 13px 42px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s}
+#cs::placeholder{color:var(--faint)}
+#cs:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,60,114,.08)}
+#dd{display:none;position:absolute;z-index:100;left:0;right:0;top:calc(100% + 6px);background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);max-height:340px;overflow-y:auto}
+#dd.open{display:block}
+.ddi{padding:11px 16px;cursor:pointer;transition:background .1s;border-bottom:1px solid var(--border);font-size:14px;line-height:1.4}
+.ddi:last-child{border-bottom:none}
+.ddi:hover,.ddi.foc{background:var(--surface2)}
+.ddi .tp{font-size:11px;color:var(--faint);margin-top:1px}
+.dde{padding:20px 16px;text-align:center;color:var(--muted);font-size:14px}
+#sc{display:none;margin-top:10px;padding:10px 14px;background:var(--t1-bg);border-radius:8px;font-size:13px;color:var(--t1-fg);font-weight:500;align-items:center;justify-content:space-between;gap:8px}
+#sc.vis{display:flex}
+#sc button{background:none;border:none;cursor:pointer;color:var(--t1-fg);font-size:16px;line-height:1;padding:0 2px;opacity:.7}
+#sc button:hover{opacity:1}
+.loader{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px;padding:32px 0}
+.spin{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.msg{padding:14px 18px;border-radius:var(--radius);font-size:14px;margin:12px 0;line-height:1.6}
+.msg.err{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c}
+@media(prefers-color-scheme:dark){.msg.err{background:#450a0a;border-color:#7f1d1d;color:#fca5a5}}
+#res{margin-top:40px;animation:fu .3s ease}
+@keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.ch{margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.ct{font-family:'EB Garamond',serif;font-size:26px;font-weight:400;line-height:1.2;margin-bottom:8px}
+.cm{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;display:inline-flex;align-items:center}
+.cb{background:var(--t1-bg);color:var(--t1-fg)}.cg{background:var(--t2-bg);color:var(--t2-fg)}
+.ca{background:var(--t3-bg);color:var(--t3-fg)}.cp{background:var(--t4-bg);color:var(--t4-fg)}
+.tc{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+.af{display:flex;gap:6px;flex-wrap:wrap}
+.fb{padding:5px 14px;font-family:'DM Sans',sans-serif;font-size:12px;border:1.5px solid var(--border);border-radius:20px;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
+.fb.act{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:500}
+.fb:not(.act):hover{border-color:var(--accent);color:var(--accent)}
+#ts{padding:7px 12px;font-family:'DM Sans',sans-serif;font-size:13px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);outline:none;width:200px;transition:border-color .15s}
+#ts:focus{border-color:var(--accent)}
+#ts::placeholder{color:var(--faint)}
+.tw{border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse}
+thead{background:var(--surface2)}
+thead th{padding:11px 16px;text-align:left;font-size:10.5px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);border-bottom:1.5px solid var(--border)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+tbody td{padding:12px 16px;vertical-align:top;font-size:14px;line-height:1.45}
+.tcog{font-weight:500}.tnom{font-size:12px;color:var(--muted);margin-top:1px}
+.ab{font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;display:inline-block;white-space:nowrap}
+.rf{margin-top:10px;font-size:12px;color:var(--faint)}
+.nd{padding:28px;text-align:center;font-size:13px;color:var(--muted);font-style:italic}
+#dd::-webkit-scrollbar{width:6px}
+#dd::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+@media(max-width:600px){
+  .page{padding:28px 16px 60px}
+  h1{font-size:26px}
+  .tc{flex-direction:column;align-items:flex-start}
+  #ts{width:100%}
+  thead th:nth-child(2),tbody td:nth-child(2){display:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="logo-row">
+      <div class="logo-mark"><span>Π</span></div>
+      <div class="logo-text"><strong>Università di Pisa</strong>Catalogo dei Corsi di Studio · A.A. 2024</div>
+    </div>
+    <h1>Trova i <em>docenti</em><br>del tuo corso</h1>
+    <p class="subtitle">Seleziona un corso per visualizzare professori e materie</p>
+  </header>
+  <div class="divider"></div>
+  <div id="sw">
+    <div class="search-wrap" id="swrap">
+      <svg class="si" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="cs" placeholder="Cerca corso di studio…" autocomplete="off">
+      <div id="dd"></div>
+    </div>
+    <div id="sc"><span id="sl"></span><button onclick="clearSel()">✕</button></div>
+  </div>
+  <div id="ll" class="loader" style="display:none"><div class="spin"></div><span>Caricamento elenco corsi…</span></div>
+  <div id="ma"></div>
+  <div id="res" style="display:none"></div>
+</div>
+<script>
+const API='https://steep-band-f9cf.staff-0ef.workers.dev',GRP='1709634589846',AA='2024';
+const ACOLS=['cb','cg','ca','cp',/* pink chip */'chip'];
+let corsi=[],fi=-1;
+
+async function apiFetch(path){
+  const url=API+path;
+  // diretto
+  try{const r=await fetch(url,{signal:AbortSignal.timeout(6000)});if(r.ok){const t=await r.text();if(t&&!t.trimStart().startsWith('<'))return JSON.parse(t);}}catch(_){}
+  // corsproxy.io
+  try{const r=await fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`,{signal:AbortSignal.timeout(10000)});if(r.ok){const t=await r.text();if(t&&!t.trimStart().startsWith('<'))return JSON.parse(t);}}catch(_){}
+  // allorigins
+  try{const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,{signal:AbortSignal.timeout(10000)});if(r.ok){const j=await r.json();const t=j.contents||'';if(t&&!t.trimStart().startsWith('<'))return JSON.parse(t);}}catch(_){}
+  // codetabs
+  try{const r=await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,{signal:AbortSignal.timeout(10000)});if(r.ok){const t=await r.text();if(t&&!t.trimStart().startsWith('<'))return JSON.parse(t);}}catch(_){}
+  throw new Error('Tutti i proxy CORS hanno fallito — riprova tra qualche secondo.');
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  loadCorsi();
+  const inp=document.getElementById('cs');
+  inp.addEventListener('input',e=>showDD(e.target.value));
+  inp.addEventListener('focus',()=>{if(corsi.length)showDD(inp.value);});
+  inp.addEventListener('keydown',onKD);
+  document.addEventListener('click',e=>{if(!document.getElementById('swrap').contains(e.target))closeDD();});
+});
+
+async function loadCorsi(){
+  g('ll').style.display='flex';clearMsg();
+  try{
+    const data=await apiFetch(`/api/v1/corsi/${AA}?gruppo=${GRP}&limit=500`);
+    corsi=(Array.isArray(data)?data:(data.items||[])).filter(c=>c.des_it).sort((a,b)=>a.des_it.localeCompare(b.des_it,'it'));
+    if(!corsi.length)throw new Error('Lista vuota.');
+  }catch(e){showMsg('err',`<strong>Impossibile caricare i corsi.</strong><br>${e.message}`);}
+  finally{g('ll').style.display='none';}
+}
+
+function showDD(q){
+  const dd=g('dd');q=q.trim().toLowerCase();
+  const lst=q?corsi.filter(c=>c.des_it.toLowerCase().includes(q)||(c.tipo_corso_des_it||'').toLowerCase().includes(q)):corsi;
+  dd._lst=lst;
+  dd.innerHTML=lst.length?lst.slice(0,100).map((c,i)=>`
+    <div class="ddi" data-i="${i}" onclick="selCorso(${i})">
+      <div>${hl(c.des_it,q)}</div>
+      <div class="tp">${esc(c.tipo_corso_des_it||'')} · ${esc(c.classe_cod||'')}</div>
+    </div>`).join(''):`<div class="dde">Nessun corso trovato</div>`;
+  dd.classList.add('open');fi=-1;
+}
+
+function closeDD(){g('dd').classList.remove('open');fi=-1;}
+
+function onKD(e){
+  const dd=g('dd');if(!dd.classList.contains('open'))return;
+  const its=[...dd.querySelectorAll('.ddi')];
+  if(e.key==='ArrowDown'){e.preventDefault();fi=Math.min(fi+1,its.length-1);updF(its);}
+  else if(e.key==='ArrowUp'){e.preventDefault();fi=Math.max(fi-1,0);updF(its);}
+  else if(e.key==='Enter'&&fi>=0){e.preventDefault();its[fi].click();}
+  else if(e.key==='Escape')closeDD();
+}
+function updF(its){its.forEach((it,i)=>it.classList.toggle('foc',i===fi));if(its[fi])its[fi].scrollIntoView({block:'nearest'});}
+
+function selCorso(idx){
+  const lst=g('dd')._lst||corsi;const c=lst[idx];if(!c)return;
+  closeDD();g('cs').value='';g('cs').blur();
+  g('sl').textContent=c.des_it;g('sc').classList.add('vis');
+  loadDocenti(c);
+}
+function clearSel(){g('sc').classList.remove('vis');g('res').style.display='none';clearMsg();g('cs').focus();}
+
+async function loadDocenti(corso){
+  const res=g('res');res.style.display='block';
+  res.innerHTML=`<div class="loader"><div class="spin"></div><span>Caricamento docenti…</span></div>`;
+  clearMsg();
+  try{
+    // codicione viene dalla lista corsi
+    const cod=corso.codicione||corso.cdsCodicione||'';
+    if(!cod)throw new Error('Campo "codicione" non presente nella lista corsi per questo corso.');
+    const data=await apiFetch(`/api/v1/corso-offerta/${corso.cod}?codicione=${cod}`);
+    renderResults(corso,data);
+  }catch(e){
+    res.innerHTML='';
+    showMsg('err',`<strong>Impossibile caricare i docenti.</strong><br>${e.message}`);
+  }
+}
+
+function renderResults(corso,data){
+  // data = { "2024": { "periodo_key": { attivita:[{des_it, annoCorso, docenti:[{des,...}]}] } } }
+  const anni=Object.keys(data).sort((a,b)=>b-a);
+  const annoTarget=anni.includes(AA)?AA:anni[0];
+  const periodi=data[annoTarget]||{};
+
+  const rows=[];const seen=new Set();
+  for(const pk of Object.keys(periodi)){
+    for(const att of (periodi[pk].attivita||[])){
+      const mat=cap1(att.des_it||'');
+      const ac=att.annoCorso||0;
+      for(const d of (att.docenti||[])){
+        if(!d.des||d.des.startsWith('000000'))continue;
+        const key=`${d.cod}__${att.adCod}`;
+        if(seen.has(key))continue;seen.add(key);
+        const p=d.des.trim().split(' ');
+        rows.push({cognome:p[0]||'',nome:p.slice(1).join(' ')||'',materia:mat,ac});
+      }
+    }
+  }
+  rows.sort((a,b)=>a.cognome.localeCompare(b.cognome,'it')||a.ac-b.ac);
+  const acAnni=[...new Set(rows.map(r=>r.ac))].filter(a=>a>0).sort();
+
+  let fA='tutti',fQ='';
+  const con=g('res');
+
+  function render(){
+    const fil=rows.filter(r=>{
+      const mA=fA==='tutti'||r.ac===+fA;
+      const q=fQ.toLowerCase();
+      return mA&&(!q||r.cognome.toLowerCase().includes(q)||r.nome.toLowerCase().includes(q)||r.materia.toLowerCase().includes(q));
+    });
+    const badge=a=>{
+      const c=a>0?['cb','cg','ca','cp'][(a-1)%4]:'';
+      return`<span class="ab chip ${c}">${a>0?'Anno '+a:'—'}</span>`;
+    };
+    const tbl=fil.length?`
+      <div class="tw"><table>
+        <thead><tr><th style="width:22%">Cognome</th><th style="width:18%">Nome</th><th>Insegnamento</th><th style="width:9%">Anno</th></tr></thead>
+        <tbody>${fil.map(r=>`
+          <tr>
+            <td><div class="tcog">${esc(cw(r.cognome))}</div></td>
+            <td><div class="tnom">${esc(cw(r.nome))}</div></td>
+            <td>${esc(r.materia)}</td>
+            <td>${badge(r.ac)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>
+      <div class="rf">${fil.length} docent${fil.length===1?'e':'i'} · A.A. ${annoTarget}</div>`
+    :`<div class="tw"><div class="nd">Nessun docente trovato${fQ?' per "'+esc(fQ)+'"':''}.</div></div>`;
+
+    con.innerHTML=`
+      <div class="ch">
+        <div class="ct">${esc(corso.des_it)}</div>
+        <div class="cm">
+          ${corso.tipo_corso_des_it?`<span class="chip cb">${esc(corso.tipo_corso_des_it)}</span>`:''}
+          ${corso.classe_cod?`<span class="chip cg">${esc(corso.classe_cod)}</span>`:''}
+          ${corso.durata_it?`<span class="chip ca">${esc(corso.durata_it)}</span>`:''}
+          ${corso.crediti_it?`<span class="chip cp">${esc(corso.crediti_it)} CFU</span>`:''}
+        </div>
+      </div>
+      <div class="tc">
+        <div class="af">
+          <button class="fb${fA==='tutti'?' act':''}" onclick="sF('tutti')">Tutti</button>
+          ${acAnni.map(a=>`<button class="fb${fA==a?' act':''}" onclick="sF('${a}')">Anno ${a}</button>`).join('')}
+        </div>
+        <input type="text" id="ts" placeholder="Filtra…" value="${esc(fQ)}" oninput="sS(this.value)">
+      </div>${tbl}`;
+    const ts=g('ts');if(ts)ts.addEventListener('input',e=>sS(e.target.value));
+  }
+
+  window.sF=v=>{fA=v;render();};
+  window.sS=v=>{fQ=v;render();};
+  render();
+}
+
+function g(id){return document.getElementById(id)}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function cap1(s){return s?s.charAt(0).toUpperCase()+s.slice(1).toLowerCase():''}
+function cw(s){return s?s.split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(' '):''}
+function hl(t,q){if(!q)return esc(t);const i=t.toLowerCase().indexOf(q);if(i<0)return esc(t);return esc(t.slice(0,i))+'<strong style="color:var(--accent)">'+esc(t.slice(i,i+q.length))+'</strong>'+esc(t.slice(i+q.length));}
+function clearMsg(){g('ma').innerHTML=''}
+function showMsg(cls,html){g('ma').innerHTML=`<div class="msg ${cls}">${html}</div>`;}
+</script>
+</body>
+</html>
