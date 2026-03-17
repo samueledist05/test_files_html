@@ -147,7 +147,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 async function loadCorsi(){
   g('ll').style.display='flex';clearMsg();
   try{
-    const data=await apiFetch(`/api/v1/corsi/${AA}?gruppo=${GRP}&limit=500`);
+    const data=await apiFetch(`/api/v1/corsi?anno=${AA}&gruppo=${GRP}`);
     corsi=(Array.isArray(data)?data:(data.items||[])).filter(c=>c.des_it).sort((a,b)=>a.des_it.localeCompare(b.des_it,'it'));
     if(!corsi.length)throw new Error('Lista vuota.');
   }catch(e){showMsg('err',`<strong>Impossibile caricare i corsi.</strong><br>${e.message}`);}
