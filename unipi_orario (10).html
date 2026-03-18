@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docenti & Orari UniPi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f3ee;--surface:#fff;--surface2:#f0ede6;--border:#ddd9d0;
+  --text:#1a1814;--muted:#6b6760;--faint:#a09c96;
+  --accent:#003c72;
+  --radius:10px;--shadow:0 2px 12px rgba(0,0,0,.07);
+  --t1-bg:#dbeafe;--t1-fg:#1e40af;
+  --t2-bg:#d1fae5;--t2-fg:#065f46;
+  --t3-bg:#fef3c7;--t3-fg:#92400e;
+  --t4-bg:#ede9fe;--t4-fg:#5b21b6;
+  --t5-bg:#fce7f3;--t5-fg:#9d174d;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#14120e;--surface:#1e1c18;--surface2:#28261f;--border:#3a3830;
+  --text:#f0ede6;--muted:#9e9a92;--faint:#5e5c56;--accent:#5b9bd5;
+  --t1-bg:#1e3a5f;--t1-fg:#93c5fd;--t2-bg:#064e3b;--t2-fg:#6ee7b7;
+  --t3-bg:#78350f;--t3-fg:#fde68a;--t4-bg:#3b0764;--t4-fg:#c4b5fd;
+  --t5-bg:#500724;--t5-fg:#fbcfe8;
+}}
+html{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;min-height:100vh}
+.page{max-width:960px;margin:0 auto;padding:48px 24px 80px}
+.logo-row{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.logo-mark{width:36px;height:36px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.logo-mark span{color:#fff;font-family:'EB Garamond',serif;font-size:18px}
+.logo-text{font-size:13px;color:var(--muted);line-height:1.3}
+.logo-text strong{color:var(--text);font-weight:500;display:block;font-size:14px}
+h1{font-family:'EB Garamond',serif;font-size:clamp(28px,5vw,42px);font-weight:400;line-height:1.15;margin-bottom:10px}
+h1 em{font-style:italic;color:var(--accent)}
+.subtitle{font-size:14px;color:var(--muted)}
+.divider{height:1px;background:var(--border);margin:32px 0}
+.search-wrap{position:relative;margin-bottom:8px}
+.si{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--faint);pointer-events:none}
+#cs{width:100%;padding:13px 14px 13px 42px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s}
+#cs::placeholder{color:var(--faint)}
+#cs:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,60,114,.08)}
+#dd{display:none;position:absolute;z-index:100;left:0;right:0;top:calc(100% + 6px);background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);max-height:340px;overflow-y:auto}
+#dd.open{display:block}
+.ddi{padding:11px 16px;cursor:pointer;transition:background .1s;border-bottom:1px solid var(--border);font-size:14px;line-height:1.4}
+.ddi:last-child{border-bottom:none}
+.ddi:hover,.ddi.foc{background:var(--surface2)}
+.ddi .tp{font-size:11px;color:var(--faint);margin-top:1px}
+.dde{padding:20px 16px;text-align:center;color:var(--muted);font-size:14px}
+#sc{display:none;margin-top:10px;padding:10px 14px;background:var(--t1-bg);border-radius:8px;font-size:13px;color:var(--t1-fg);font-weight:500;align-items:center;justify-content:space-between;gap:8px}
+#sc.vis{display:flex}
+#sc button{background:none;border:none;cursor:pointer;color:var(--t1-fg);font-size:16px;line-height:1;padding:0 2px;opacity:.7}
+#sc button:hover{opacity:1}
+.loader{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px;padding:32px 0}
+.spin{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+.msg{padding:14px 18px;border-radius:var(--radius);font-size:14px;margin:12px 0;line-height:1.6}
+.msg.err{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c}
+@media(prefers-color-scheme:dark){.msg.err{background:#450a0a;border-color:#7f1d1d;color:#fca5a5}}
+#res{margin-top:40px;animation:fu .3s ease}
+@keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.ch{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.ct{font-family:'EB Garamond',serif;font-size:26px;font-weight:400;line-height:1.2;margin-bottom:8px}
+.cm{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;display:inline-flex;align-items:center}
+.cb{background:var(--t1-bg);color:var(--t1-fg)}.cg{background:var(--t2-bg);color:var(--t2-fg)}
+.ca{background:var(--t3-bg);color:var(--t3-fg)}.cp{background:var(--t4-bg);color:var(--t4-fg)}
+/* --- ANNO SELECTOR --- */
+#anno-sel{display:none;margin-top:10px;gap:8px;flex-wrap:wrap;animation:fu .25s ease}
+#anno-sel.vis{display:flex;align-items:center}
+.anno-label{font-size:13px;color:var(--muted);margin-right:4px}
+.anno-btn{padding:5px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:1.5px solid var(--border);border-radius:20px;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
+.anno-btn.act{background:var(--accent);color:#fff;border-color:var(--accent)}
+.anno-btn:not(.act):hover{border-color:var(--accent);color:var(--accent)}
+/* --- TABS --- */
+.tab-bar{display:flex;gap:0;border-bottom:1.5px solid var(--border);margin-bottom:24px}
+.tab-btn{padding:10px 22px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:none;background:none;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1.5px;transition:all .15s;display:flex;align-items:center;gap:6px}
+.tab-btn.act{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-btn:not(.act):hover{color:var(--text)}
+.tab-pane{display:none}
+.tab-pane.act{display:block}
+/* Docenti table controls */
+.tc{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+.af{display:flex;gap:6px;flex-wrap:wrap}
+.fb{padding:5px 14px;font-family:'DM Sans',sans-serif;font-size:12px;border:1.5px solid var(--border);border-radius:20px;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
+.fb.act{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:500}
+.fb:not(.act):hover{border-color:var(--accent);color:var(--accent)}
+#ts{padding:7px 12px;font-family:'DM Sans',sans-serif;font-size:13px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);outline:none;width:200px;transition:border-color .15s}
+#ts:focus{border-color:var(--accent)}
+#ts::placeholder{color:var(--faint)}
+.tw{border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse}
+thead{background:var(--surface2)}
+thead th{padding:11px 16px;text-align:left;font-size:10.5px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);border-bottom:1.5px solid var(--border)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+tbody td{padding:12px 16px;vertical-align:top;font-size:14px;line-height:1.45}
+.tcog{font-weight:500}.tnom{font-size:12px;color:var(--muted);margin-top:1px}
+.ab{font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;display:inline-block;white-space:nowrap}
+.rf{margin-top:10px;font-size:12px;color:var(--faint)}
+.nd{padding:28px;text-align:center;font-size:13px;color:var(--muted);font-style:italic}
+/* --- ORARIO SCHEDULE --- */
+.week-nav{display:flex;align-items:center;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+.week-range{font-weight:500;font-size:14px;flex:1;min-width:160px}
+.week-range span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+.wnav-btn{width:32px;height:32px;border:1.5px solid var(--border);border-radius:8px;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text);transition:border-color .15s,color .15s;font-size:15px;flex-shrink:0}
+.wnav-btn:hover{border-color:var(--accent);color:var(--accent)}
+.wnav-today{padding:0 14px;height:32px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;border:1.5px solid var(--border);border-radius:8px;background:none;cursor:pointer;color:var(--muted);transition:all .15s}
+.wnav-today:hover{border-color:var(--accent);color:var(--accent)}
+.sched-progress{font-size:12px;color:var(--faint);display:flex;align-items:center;gap:6px;margin-bottom:16px}
+.sched-day{margin-bottom:24px}
+.sched-day-header{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;padding-bottom:8px;border-bottom:1.5px solid var(--border)}
+.sched-day-name{font-family:'EB Garamond',serif;font-size:21px;font-weight:400}
+.sched-day-date{font-size:12px;color:var(--faint)}
+.sched-day-today .sched-day-name{color:var(--accent)}
+.sched-day-today .sched-day-date::after{content:'oggi';display:inline-block;margin-left:6px;font-size:10px;font-weight:600;background:var(--accent);color:#fff;padding:1px 6px;border-radius:10px;font-style:normal;vertical-align:middle}
+.sched-lessons{display:flex;flex-direction:column;gap:8px}
+.sched-lesson{display:flex;gap:0;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .15s,box-shadow .15s}
+.sched-lesson:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(0,60,114,.07)}
+.sched-timebar{width:4px;background:var(--accent);flex-shrink:0;opacity:.6}
+.sched-inner{display:flex;gap:14px;align-items:flex-start;padding:12px 16px;flex:1;min-width:0}
+.sched-time{min-width:86px;font-size:13px;font-weight:600;color:var(--accent);white-space:nowrap;padding-top:1px;font-variant-numeric:tabular-nums}
+.sched-info{flex:1;min-width:0}
+.sched-course{font-weight:500;font-size:14px;margin-bottom:5px;line-height:1.3}
+.sched-meta{display:flex;flex-wrap:wrap;gap:4px 14px}
+.sched-meta-item{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px}
+.sched-meta-item svg{flex-shrink:0;opacity:.6}
+.sched-tag{font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;background:var(--t4-bg);color:var(--t4-fg);white-space:nowrap;margin-top:5px;display:inline-block}
+.sched-empty{text-align:center;padding:48px 24px;color:var(--muted);font-size:14px}
+.sched-empty strong{display:block;font-family:'EB Garamond',serif;font-size:22px;color:var(--text);font-weight:400;margin-bottom:8px}
+.sched-materia-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin-bottom:14px;transition:border-color .15s}
+.sched-materia-card:hover{border-color:var(--accent)}
+.sched-materia-head{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.sched-materia-accent{width:3px;height:32px;border-radius:2px;background:var(--accent);flex-shrink:0;opacity:.7}
+.sched-materia-title{font-weight:500;font-size:14px;flex:1;min-width:0}
+.sched-materia-prof{font-size:12px;color:var(--muted);margin-top:2px}
+.sched-materia-sessions{padding:0}
+.sched-session{display:flex;align-items:center;gap:14px;padding:11px 16px;border-bottom:1px solid var(--border);transition:background .1s}
+.sched-session:last-child{border-bottom:none}
+.sched-session:hover{background:var(--surface2)}
+.sched-session-day{font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;width:72px;flex-shrink:0}
+.sched-session-time{font-size:13px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;width:110px;flex-shrink:0;color:var(--text)}
+.sched-session-time span{color:var(--faint);font-weight:400}
+.sched-session-aula{font-size:12px;color:var(--muted);flex:1;min-width:0;display:flex;align-items:center;gap:4px}
+.sched-session-aula svg{flex-shrink:0;opacity:.5}
+.sched-cors-err{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:24px;font-size:13px;line-height:1.7;color:var(--muted)}
+.sched-cors-err strong{color:var(--text);font-weight:500}
+.sched-cors-err code{font-family:monospace;background:var(--surface2);padding:1px 6px;border-radius:4px;font-size:12px;color:var(--accent)}
+#dd::-webkit-scrollbar{width:6px}
+#dd::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+@media(max-width:600px){
+  .page{padding:28px 16px 60px}
+  h1{font-size:26px}
+  .tc{flex-direction:column;align-items:flex-start}
+  #ts{width:100%}
+  thead th:nth-child(2),tbody td:nth-child(2){display:none}
+  .sched-inner{flex-direction:column;gap:6px}
+  .sched-time{min-width:0}
+  .tab-btn{padding:10px 14px;font-size:12px}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="logo-row">
+      <div class="logo-mark"><span>Π</span></div>
+      <div class="logo-text"><strong>Università di Pisa</strong>Catalogo dei Corsi di Studio · A.A. 2024</div>
+    </div>
+    <h1>Trova i <em>docenti</em><br>del tuo corso</h1>
+    <p class="subtitle">Seleziona un corso per visualizzare professori, materie e orario settimanale</p>
+  </header>
+  <div class="divider"></div>
+  <div id="sw">
+    <div class="search-wrap" id="swrap">
+      <svg class="si" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="cs" placeholder="Cerca corso di studio…" autocomplete="off">
+      <div id="dd"></div>
+    </div>
+    <div id="sc"><span id="sl"></span><button onclick="clearSel()">✕</button></div>
+    <div id="anno-sel"></div>
+  </div>
+  <div id="ll" class="loader" style="display:none"><div class="spin"></div><span>Caricamento elenco corsi…</span></div>
+  <div id="ma"></div>
+  <div id="res" style="display:none"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   PROXY + CONFIG
+═══════════════════════════════════════════════ */
+const API='https://steep-band-f9cf.staff-0ef.workers.dev',AA='2025';
+const GRUPPI=['1709634589846','1709634589847']; // triennale + magistrale
+
+/* ═══════════════════════════════════════════════
+   CINECA SCHEDULE API (ported from Dart)
+═══════════════════════════════════════════════ */
+const CIN_BASE='https://unipi.prod.up.cineca.it/api';
+const CIN_CLIENT='628de8b9b63679f193b87046';
+const CIN_HEADS={'Content-Type':'application/json','User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'};
+const CIN_POLI={
+  'Polo Fibonacci':'63223a029f080a0aab032afc',
+  'Palazzi Boileau e Curini':'6501c860675557007eb417c0',
+  'Carmignani':'63247758e3772a0690e3b9f3',
+  'Economia':'6501c7315640d3007d1012b9',
+  'Guidotti':'64ff310b0c7dac007d24cdc3',
+  'Polo A':'6501cd77675557007eb41821',
+  'Polo B':'6501cd457673860078e02a48',
+  'Polo C':'6501c97d7baed20078e4d819',
+  'Polo F':'6501cdd3fb98af007db6d618',
+  'Nobili':'64ff316f3f77cd0078076002',
+  'Polo Piagge':'631e682b617f10007c563735',
+  'Porta Nuova':'63247c2237746802ea1c1cae',
+  'Ricci':'64ff2e89dd600900782c3cc3',
+  'San Rossore':'63247d5f75616d04046a0779',
+  'Sapienza':'63247af9ac73c806bfa2def2',
+};
+
+function parseCinecaDate(s){
+  if(!s) return new Date();
+  if(!s.endsWith('Z')&&!s.includes('+')) s+='Z';
+  return new Date(s);
+}
+
+function fmtCinecaParam(d){
+  const p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
+async function cinecaPost(path,body){
+  const r=await fetch(CIN_BASE+path,{method:'POST',headers:CIN_HEADS,body:JSON.stringify(body),signal:AbortSignal.timeout(12000)});
+  if(!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+async function fetchPoloSchedule(poloName,poloId,dataInizio,dataFine){
+  // Step 1: get rooms for this polo
+  const aule=await cinecaPost('/Aule/getAulePerCalendarioPubblico',{linkCalendarioId:poloId,clienteId:CIN_CLIENT});
+  if(!Array.isArray(aule)||!aule.length) return [];
+  const auleIds=aule.map(a=>String(a.id||a._id||'')).filter(Boolean);
+
+  // Step 2: get impegni filtered by rooms
+  const impegni=await cinecaPost('/Impegni/getImpegniCalendarioPubblico',{
+    linkCalendarioId:poloId,clienteId:CIN_CLIENT,
+    auleIds,dataInizio,dataFine,mostraImpegniAnnullati:false
+  });
+  if(!Array.isArray(impegni)) return [];
+
+  // Annotate each impegno with polo name and room info
+  return impegni.map(imp=>{
+    // Room name: try risorsa.descrizione → descrizione on each aula entry
+    const aulaObjs=imp.aule||[];
+    const aulaNome=aulaObjs.map(a=>{
+      if(a.risorsa?.descrizione) return a.risorsa.descrizione;
+      return a.descrizione||a.nome||'';
+    }).filter(Boolean).join(', ')||'—';
+    return {...imp,_polo:poloName,_aulaNome:aulaNome};
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   WEEK NAVIGATION STATE
+═══════════════════════════════════════════════ */
+let schedOffset=0;
+
+function getWeekRange(offset){
+  const now=new Date();
+  const dow=now.getDay(); // 0=Sun
+  const diffToMon=dow===0?-6:1-dow;
+  const mon=new Date(now);
+  mon.setDate(now.getDate()+diffToMon+(offset*7));
+  mon.setHours(0,0,0,0);
+  const sun=new Date(mon);
+  sun.setDate(mon.getDate()+6);
+  sun.setHours(23,59,59,999);
+  return{mon,sun};
+}
+
+function fmtWeekLabel(mon,sun){
+  const opt={day:'numeric',month:'long'};
+  const optY={day:'numeric',month:'long',year:'numeric'};
+  const ms=mon.toLocaleDateString('it-IT',opt);
+  const se=sun.toLocaleDateString('it-IT',optY);
+  return `${ms} – ${se}`;
+}
+
+/* ═══════════════════════════════════════════════
+   GLOBAL STATE
+═══════════════════════════════════════════════ */
+let corsi=[],fi=-1;
+let currentRows=[]; // professors of selected course
+let activeTab='docenti';
+let selectedAnno=0; // 0 = tutti gli anni
+let currentCdsCods=new Set(); // tutti i cdsCod del corso (può cambiare tra anni, es. ITC-L)
+
+/* ═══════════════════════════════════════════════
+   COURSE LIST API
+═══════════════════════════════════════════════ */
+async function apiFetch(path){
+  const url=API+path;
+  const r=await fetch(url,{signal:AbortSignal.timeout(15000)});
+  if(!r.ok) throw new Error(`Errore HTTP ${r.status}`);
+  const t=await r.text();
+  if(!t||t.trimStart().startsWith('<')) throw new Error('Risposta non valida dal server.');
+  return JSON.parse(t);
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  loadCorsi();
+  const inp=document.getElementById('cs');
+  inp.addEventListener('input',e=>showDD(e.target.value));
+  inp.addEventListener('focus',()=>{if(corsi.length)showDD(inp.value);});
+  inp.addEventListener('keydown',onKD);
+  document.addEventListener('click',e=>{if(!document.getElementById('swrap').contains(e.target))closeDD();});
+});
+
+async function loadCorsi(){
+  g('ll').style.display='flex';clearMsg();
+  try{
+    // Fetch triennale + magistrale in parallelo
+    const responses=await Promise.all(GRUPPI.map(grp=>apiFetch(`/api/v1/corsi?anno=${AA}&gruppo=${grp}`)));
+    const flat=[];
+    for(const data of responses){
+      const gruppi=Array.isArray(data)?data:[data];
+      for(const gr of gruppi){
+        for(const sg of (gr.subgroups||[])){
+          for(const cds of (sg.cds||[])){
+            for(const c of (cds.cdsSub||[])){
+              if(c.des_it) flat.push(c);
+            }
+          }
+        }
+      }
+      if(Array.isArray(data)) data.filter(c=>c.des_it).forEach(c=>{if(!flat.find(x=>x.cod===c.cod))flat.push(c);});
+    }
+    // deduplica per cod
+    const seen=new Set();
+    corsi=flat.filter(c=>{if(seen.has(c.cod))return false;seen.add(c.cod);return true;})
+              .sort((a,b)=>a.des_it.localeCompare(b.des_it,'it'));
+    if(!corsi.length) throw new Error('Lista vuota.');
+  }catch(e){showMsg('err',`<strong>Impossibile caricare i corsi.</strong><br>${e.message}`);}
+  finally{g('ll').style.display='none';}
+}
+
+function showDD(q){
+  const dd=g('dd');q=q.trim().toLowerCase();
+  const lst=q?corsi.filter(c=>c.des_it.toLowerCase().includes(q)||(c.tipo_corso_des_it||'').toLowerCase().includes(q)):corsi;
+  dd._lst=lst;
+  dd.innerHTML=lst.length?lst.slice(0,100).map((c,i)=>`
+    <div class="ddi" data-i="${i}" onclick="selCorso(${i})">
+      <div>${hl(c.des_it,q)}</div>
+      <div class="tp">${esc(c.tipo_corso_des_it||'')} · ${esc(c.classe_cod||'')}</div>
+    </div>`).join(''):`<div class="dde">Nessun corso trovato</div>`;
+  dd.classList.add('open');fi=-1;
+}
+function closeDD(){g('dd').classList.remove('open');fi=-1;}
+function onKD(e){
+  const dd=g('dd');if(!dd.classList.contains('open'))return;
+  const its=[...dd.querySelectorAll('.ddi')];
+  if(e.key==='ArrowDown'){e.preventDefault();fi=Math.min(fi+1,its.length-1);updF(its);}
+  else if(e.key==='ArrowUp'){e.preventDefault();fi=Math.max(fi-1,0);updF(its);}
+  else if(e.key==='Enter'&&fi>=0){e.preventDefault();its[fi].click();}
+  else if(e.key==='Escape')closeDD();
+}
+function updF(its){its.forEach((it,i)=>it.classList.toggle('foc',i===fi));if(its[fi])its[fi].scrollIntoView({block:'nearest'});}
+
+function selCorso(idx){
+  const lst=g('dd')._lst||corsi;const c=lst[idx];if(!c)return;
+  closeDD();g('cs').value='';g('cs').blur();
+  g('sl').textContent=c.des_it;g('sc').classList.add('vis');
+  activeTab='docenti';
+  schedOffset=0;
+  selectedAnno=0;
+  currentCdsCods=new Set();
+  if(c.cdsCod) currentCdsCods.add(c.cdsCod.toUpperCase());
+  if(c.extCode&&c.extCode!==c.cdsCod) currentCdsCods.add(c.extCode.toUpperCase());
+  g('anno-sel').classList.remove('vis');g('anno-sel').innerHTML='';
+  loadDocenti(c);
+}
+function clearSel(){
+  g('sc').classList.remove('vis');
+  g('anno-sel').classList.remove('vis');g('anno-sel').innerHTML='';
+  g('res').style.display='none';clearMsg();g('cs').focus();
+  selectedAnno=0;
+  currentCdsCods=new Set();
+}
+
+// Cerca il cod di un corso in un dato anno tramite codicione
+async function findCodByCodicione(anno, codicione, gruppoCod){
+  try{
+    const data=await apiFetch(`/api/v1/corsi?anno=${anno}&gruppo=${gruppoCod}`);
+    const flat=[];
+    const gruppi=Array.isArray(data)?data:[data];
+    for(const g of gruppi){
+      for(const sg of (g.subgroups||[])){
+        for(const cds of (sg.cds||[])){
+          for(const c of (cds.cdsSub||[])){
+            if(c.codicione) flat.push(c);
+          }
+        }
+      }
+      // fallback struttura piatta
+      if(Array.isArray(data)){
+        for(const c of data){
+          if(c.codicione&&!flat.find(x=>x.cod===c.cod)) flat.push(c);
+        }
+      }
+    }
+    const found=flat.find(c=>c.codicione===codicione);
+    return found?.cod||null;
+  }catch(e){ return null; }
+}
+
+async function loadDocenti(corso){
+  const res=g('res');res.style.display='block';
+  res.innerHTML=`<div class="loader"><div class="spin"></div><span>Caricamento docenti…</span></div>`;
+  clearMsg();
+  try{
+    const durata=parseInt((corso.durata_it||'1').match(/\d+/)?.[0]||'1',10);
+    const codicione=corso.codicione||'';
+    const gruppoCod=corso.gruppo_cod||GRUPPI[0];
+
+    // Per ogni anno precedente: trova il cod corretto tramite codicione
+    const fetchPromises=[apiFetch(`/api/v1/corso/${AA}/${corso.cod}`)]; // anno corrente
+    for(let i=1;i<durata;i++){
+      const prevAA=AA-i;
+      fetchPromises.push(
+        // Prima prova lo stesso cod; se non funziona cerca tramite codicione
+        apiFetch(`/api/v1/corso/${prevAA}/${corso.cod}`)
+          .then(d=>{
+            const item=Array.isArray(d)?d[0]:d;
+            // Se il codicione corrisponde ok, altrimenti cerca il cod giusto
+            if(item&&(!codicione||item.codicione===codicione)) return d;
+            // cod cambiato: cerca nella lista di quell'anno
+            return findCodByCodicione(prevAA,codicione,gruppoCod)
+              .then(oldCod=>oldCod?apiFetch(`/api/v1/corso/${prevAA}/${oldCod}`):null);
+          })
+          .catch(()=>findCodByCodicione(prevAA,codicione,gruppoCod)
+            .then(oldCod=>oldCod?apiFetch(`/api/v1/corso/${prevAA}/${oldCod}`):null))
+      );
+    }
+
+    const responses=await Promise.allSettled(fetchPromises);
+    const allPercorsi=[];
+    let base=null;
+    for(let i=0;i<responses.length;i++){
+      if(responses[i].status!=='fulfilled'||!responses[i].value) continue;
+      const d=Array.isArray(responses[i].value)?responses[i].value[0]:responses[i].value;
+      if(!d) continue;
+      if(i===0) base=d;
+      // Raccogli tutti i cdsCod da ogni anno (il codice può cambiare tra anni)
+      if(d.cdsCod) currentCdsCods.add(d.cdsCod.toUpperCase());
+      if(d.extCode) currentCdsCods.add(d.extCode.toUpperCase());
+      for(const p of (d.percorsi||[])) allPercorsi.push({...p,_fetchAnno:AA-i});
+    }
+    if(!base) throw new Error('Nessun dato disponibile per questo corso.');
+    renderMain(corso,{...base,percorsi:allPercorsi});
+  }catch(e){
+    res.innerHTML='';
+    showMsg('err',`<strong>Impossibile caricare i docenti.</strong><br>${e.message}`);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   MAIN RENDER (tabs wrapper)
+═══════════════════════════════════════════════ */
+function renderMain(corso,data){
+  // Build rows from course data (supports both v1 and v2 structures)
+  const rows=[];const seen=new Set();
+
+  // v2: percorsi→anni→insegnamenti→attivita
+  // Ogni percorso può avere _fetchAnno (anno API da cui proviene)
+  if(data.percorsi){
+    // Raggruppa percorsi per pdsCod per evitare duplicati tra fetch diversi
+    // Priorità: fetch con più docenti (AA più vecchio = anno già assegnato)
+    for(const p of (data.percorsi||[])){
+      for(const annoObj of (p.anni||[])){
+        const ac=typeof annoObj.anno==='number'?annoObj.anno:0;
+        if(!ac) continue; // salta 'altreAttivita'
+        for(const grp of (annoObj.insegnamenti||[])){
+          for(const att of (grp.attivita||[])){
+            const mat=cap1(att.des_it||'');
+            if(!mat) continue;
+            const docenti=(att.docenti||[]).filter(d=>d.des&&!d.des.startsWith('000000'));
+            if(docenti.length){
+              for(const d of docenti){
+                const key=`${d.cod}__${att.adCod}`;
+                if(seen.has(key))continue;seen.add(key);
+                const {cognome,nome}=parseDes(d.des);
+                rows.push({cognome,nome,materia:mat,ac,_mat:d.matricola||d.cod||'',_adCod:att.adCod||''});
+              }
+              // Rimuovi eventuale placeholder senza docente per questa attività
+              const noDocKey=`nodoce__${att.adCod}`;
+              seen.add(noDocKey); // blocca futuri placeholder per questo adCod
+            } else {
+              // Mostra placeholder solo se non esiste già una riga con docente
+              const noDocKey=`nodoce__${att.adCod}`;
+              if(seen.has(noDocKey))continue;
+              // Controlla se esiste già un docente per questo adCod in rows
+              if(rows.some(r=>r._adCod===att.adCod&&!r.noDocente))continue;
+              seen.add(noDocKey);
+              rows.push({cognome:'—',nome:'',materia:mat,ac,noDocente:true,_adCod:att.adCod});
+            }
+          }
+        }
+      }
+    }
+  } else {
+    // v1: year→period→attivita — iteriamo TUTTI gli anni
+    const anni=Object.keys(data);
+    for(const annoKey of anni){
+      const periodi=data[annoKey]||{};
+      if(typeof periodi!=='object'||Array.isArray(periodi)) continue;
+      for(const pk of Object.keys(periodi)){
+        for(const att of (periodi[pk].attivita||[])){
+          const mat=cap1(att.des_it||'');
+          if(!mat) continue;
+          const ac=att.annoCorso||0;
+          const docenti=(att.docenti||[]).filter(d=>d.des&&!d.des.startsWith('000000'));
+          if(docenti.length){
+            for(const d of docenti){
+              const key=`${d.cod}__${att.adCod}`;
+              if(seen.has(key))continue;seen.add(key);
+              const {cognome,nome}=parseDes(d.des);
+              rows.push({cognome,nome,materia:mat,ac,_mat:d.matricola||d.cod||'',_adCod:att.adCod||''});
+            }
+          } else {
+            const key=`nodoce__${att.adCod}`;
+            if(seen.has(key))continue;seen.add(key);
+            rows.push({cognome:'—',nome:'',materia:mat,ac,noDocente:true});
+          }
+        }
+      }
+    }
+  }
+
+  rows.sort((a,b)=>a.cognome.localeCompare(b.cognome,'it')||a.ac-b.ac);
+  currentRows=[...rows]; // store globally for schedule tab
+
+  const acAnni=[...new Set(rows.map(r=>r.ac))].filter(a=>a>0).sort();
+  // Se c'è un solo anno disponibile, selezionalo automaticamente
+  if(acAnni.length===1&&selectedAnno===0) selectedAnno=acAnni[0];
+
+  // Mostra selettore anno se ci sono più anni
+  const annoSelEl=g('anno-sel');
+  if(acAnni.length>0){
+    annoSelEl.innerHTML=`
+      <span class="anno-label">Anno:</span>
+      ${acAnni.map(a=>`<button class="anno-btn${selectedAnno===a?' act':''}" onclick="setAnno(${a})">${a}°</button>`).join('')}`;
+    annoSelEl.classList.add('vis');
+  } else {
+    annoSelEl.classList.remove('vis');
+    annoSelEl.innerHTML='';
+  }
+
+  let fA='tutti',fQ='';
+  const con=g('res');
+
+  function renderDocentiTable(){
+    const fil=rows.filter(r=>{
+      if(r.noDocente) return false;
+      // Filtro anno globale (selettore sopra la ricerca)
+      if(selectedAnno>0&&r.ac!==selectedAnno) return false;
+      const mA=fA==='tutti'||r.ac===+fA;
+      const q=fQ.toLowerCase();
+      return mA&&(!q||r.cognome.toLowerCase().includes(q)||r.nome.toLowerCase().includes(q)||r.materia.toLowerCase().includes(q));
+    });
+    const badge=a=>{
+      const cl=a>0?['cb','cg','ca','cp'][(a-1)%4]:'';
+      return`<span class="ab chip ${cl}">${a>0?'Anno '+a:'—'}</span>`;
+    };
+    const docAssegnati=fil.filter(r=>!r.noDocente).length;
+    const tbl=fil.length?`
+      <div class="tw"><table>
+        <thead><tr><th style="width:22%">Cognome</th><th style="width:18%">Nome</th><th>Insegnamento</th><th style="width:9%">Anno</th></tr></thead>
+        <tbody>${fil.map(r=>`
+          <tr${r.noDocente?' style="opacity:.55"':''}>
+            <td><div class="tcog" style="${r.noDocente?'color:var(--faint);font-style:italic':''}">${r.noDocente?'Non assegnato':esc(cw(r.cognome))}</div></td>
+            <td><div class="tnom">${esc(cw(r.nome))}</div></td>
+            <td>${esc(r.materia)}</td>
+            <td>${badge(r.ac)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>
+      <div class="rf">${fil.length} docent${fil.length===1?'e':'i'} · A.A. ${AA}</div>`
+    :`<div class="tw"><div class="nd">Nessun insegnamento trovato${fQ?' per "'+esc(fQ)+'"':''}.</div></div>`;
+
+    const docDiv=document.getElementById('pane-docenti');
+    if(!docDiv) return;
+    // I bottoni anno dentro la tab sono visibili solo se non c'è già un anno globale selezionato
+    const showAnniBtns=selectedAnno===0;
+    docDiv.innerHTML=`
+      <div class="tc">
+        ${showAnniBtns?`<div class="af">
+          <button class="fb${fA==='tutti'?' act':''}" onclick="sF('tutti')">Tutti</button>
+          ${acAnni.map(a=>`<button class="fb${fA==a?' act':''}" onclick="sF('${a}')">Anno ${a}</button>`).join('')}
+        </div>`:'<div></div>'}
+        <input type="text" id="ts" placeholder="Filtra…" value="${esc(fQ)}" oninput="sS(this.value)">
+      </div>${tbl}`;
+    const ts=document.getElementById('ts');
+    if(ts) ts.addEventListener('input',e=>sS(e.target.value));
+  }
+
+  window.sF=v=>{fA=v;renderDocentiTable();};
+  window.sS=v=>{fQ=v;renderDocentiTable();};
+  window.setAnno=v=>{
+    selectedAnno=v;
+    // Aggiorna bottoni anno
+    document.querySelectorAll('.anno-btn').forEach(b=>b.classList.toggle('act',+b.textContent===v));
+    // Resetta filtro anno tabella (ora usa selectedAnno globale)
+    fA='tutti';
+    renderDocentiTable();
+    // Se tab orario attivo, ricarica
+    if(activeTab==='orario') loadOrario();
+  };
+
+  // Build scaffold with tabs
+  con.innerHTML=`
+    <div class="ch">
+      <div class="ct">${esc(corso.des_it)}</div>
+      <div class="cm">
+        ${corso.tipo_corso_des_it?`<span class="chip cb">${esc(corso.tipo_corso_des_it)}</span>`:''}
+        ${corso.classe_cod?`<span class="chip cg">${esc(corso.classe_cod)}</span>`:''}
+        ${corso.durata_it?`<span class="chip ca">${esc(corso.durata_it)}</span>`:''}
+        ${corso.crediti_it?`<span class="chip cp">${esc(corso.crediti_it)} CFU</span>`:''}
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn act" id="tbtn-docenti" onclick="switchTab('docenti')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Docenti
+        <span style="background:var(--surface2);color:var(--muted);font-size:10px;padding:1px 6px;border-radius:10px;font-weight:500">${rows.length}</span>
+      </button>
+      <button class="tab-btn" id="tbtn-orario" onclick="switchTab('orario')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Orario Settimanale
+      </button>
+    </div>
+    <div id="pane-docenti" class="tab-pane act"></div>
+    <div id="pane-orario" class="tab-pane">
+      <div id="orario-inner"></div>
+    </div>`;
+
+  renderDocentiTable();
+}
+
+/* ═══════════════════════════════════════════════
+   TAB SWITCHING
+═══════════════════════════════════════════════ */
+function switchTab(tab){
+  activeTab=tab;
+  ['docenti','orario'].forEach(t=>{
+    document.getElementById('tbtn-'+t)?.classList.toggle('act',t===tab);
+    document.getElementById('pane-'+t)?.classList.toggle('act',t===tab);
+  });
+  if(tab==='orario') loadOrario();
+}
+
+/* ═══════════════════════════════════════════════
+   SCHEDULE LOADER (adapted from Dart ScheduleService)
+═══════════════════════════════════════════════ */
+async function loadOrario(){
+  const container=document.getElementById('orario-inner');
+  if(!container) return;
+  if(!currentRows.length){
+    container.innerHTML=`<div class="sched-empty"><strong>Nessun docente</strong>Seleziona prima un corso con docenti associati.</div>`;
+    return;
+  }
+  const rowsCheck=currentRows.filter(r=>!r.noDocente&&(selectedAnno===0||r.ac===selectedAnno));
+  if(!rowsCheck.length){
+    container.innerHTML=`<div class="sched-empty"><strong>Nessun docente per questo anno</strong>Seleziona un anno di corso valido.</div>`;
+    return;
+  }
+
+  const {mon,sun}=getWeekRange(schedOffset);
+  const dataInizio=fmtCinecaParam(mon);
+  const dataFine=fmtCinecaParam(sun);
+
+  // Set nome+cognome completo (COGNOME NOME uppercase) — evita falsi positivi da omonimia
+  const nomiCompleti=new Set();         // "ROSSI MARIO"
+  const matricoleSet=new Set();
+  const profToMaterie=new Map();        // "ROSSI MARIO" → Set<materia_uppercase>
+  const matricolaToMaterie=new Map();   // "012345" → Set<materia_uppercase>
+  // Filtra per anno selezionato se attivo
+  const rowsPerOrario=currentRows.filter(r=>!r.noDocente&&(selectedAnno===0||r.ac===selectedAnno));
+  rowsPerOrario.forEach(r=>{
+    const cog=r.cognome.toUpperCase().trim();
+    const nom=r.nome.toUpperCase().trim();
+    const full=nom?`${cog} ${nom}`:cog;
+    const matUp=r.materia.toUpperCase().trim();
+    nomiCompleti.add(full);
+    if(!profToMaterie.has(full)) profToMaterie.set(full,new Set());
+    profToMaterie.get(full).add(matUp);
+    if(r._mat){
+      matricoleSet.add(r._mat.trim());
+      if(!matricolaToMaterie.has(r._mat.trim())) matricolaToMaterie.set(r._mat.trim(),new Set());
+      matricolaToMaterie.get(r._mat.trim()).add(matUp);
+    }
+
+  });
+
+  // Normalizza un nome evento per confronto fuzzy con le materie del catalogo
+  function normalizeEvent(s){return s.toUpperCase().trim().replace(/['''`]/g,"'");}
+  // Controlla se l'eventName corrisponde a una delle materie nel Set
+  function materiaMatch(eventName,materieSet){
+    if(!materieSet) return false;
+    const ev=normalizeEvent(eventName);
+    for(const m of materieSet){
+      // Corrispondenza esatta
+      if(ev===m) return true;
+      // Una contiene l'altra (gestisce abbreviazioni tipo "DATA MINING" vs "DATA MINING AND MACHINE LEARNING")
+      if(ev.includes(m)||m.includes(ev)) return true;
+    }
+    return false;
+  }
+
+  // Show loading with week range
+  const weekLabel=fmtWeekLabel(mon,sun);
+  container.innerHTML=`
+    ${weekNavHtml(weekLabel)}
+    <div class="loader"><div class="spin"></div><span>Ricerca orari su Cineca per ${nomiCompleti.size} docent${nomiCompleti.size===1?'e':'i'}…</span></div>`;
+
+  // Attach nav buttons
+  attachNavListeners();
+
+  const poloEntries=Object.entries(CIN_POLI);
+  let corsBlocked=false;
+
+  // Fetch all polos in parallel (each polo: fetch aule → fetch impegni)
+  const results=await Promise.allSettled(
+    poloEntries.map(([name,id])=>fetchPoloSchedule(name,id,dataInizio,dataFine))
+  );
+
+  // Collect and filter lessons
+  const lessons=[];
+  results.forEach((res,i)=>{
+    if(res.status==='rejected'){
+      const err=String(res.reason);
+      if(err.includes('Failed to fetch')||err.includes('CORS')||err.includes('NetworkError')) corsBlocked=true;
+      return;
+    }
+    const poloName=poloEntries[i][0];
+    const impegni=Array.isArray(res.value)?res.value:[];
+
+    for(const imp of impegni){
+      // Extract docenti from this impegno
+      const docenti=imp.docenti||[];
+      const eventName=imp.evento?.descrizione||imp.nome||'Lezione';
+
+      // Trova i prof che: 1) corrispondono per nome+cognome/matricola E 2) insegnano questa materia nel corso
+      const matchingProfs=docenti.filter(d=>{
+        // Risolvi la chiave prof per questo docente
+        let profKey=null;
+        const matCode=(d.matricola||d.cod||'').trim();
+        if(matCode&&matricoleSet.has(matCode)){
+          // Verifica materia tramite matricola
+          if(materiaMatch(eventName,matricolaToMaterie.get(matCode))) return true;
+          // Se ha matricola ma materia non trovata nel corso → escludi
+          return false;
+        }
+        const cogFull=(d.cognome||'').toUpperCase().trim();
+        const nomFull=(d.nome||'').toUpperCase().trim();
+        if(cogFull){
+          profKey=nomFull?`${cogFull} ${nomFull}`:cogFull;
+        } else if(d.des){
+          const {cognome,nome}=parseDes(d.des);
+          const cUp=cognome.toUpperCase();
+          const nUp=nome.toUpperCase();
+          profKey=nUp?`${cUp} ${nUp}`:cUp;
+        }
+        if(!profKey) return false;
+        if(!nomiCompleti.has(profKey)) return false;
+        // Prof trovato nel corso: verifica che la materia corrisponda
+        return materiaMatch(eventName,profToMaterie.get(profKey));
+      });
+      if(!matchingProfs.length) continue;
+
+      // Filtra per corso tramite imp.corsi (array con codice es. "ITC-L", "INF-L")
+      // Ogni impegno sa esattamente a quale corso appartiene.
+      // Usiamo il set di tutti i cdsCod del corso (può variare tra anni accademici).
+      if(currentCdsCods.size>0&&Array.isArray(imp.corsi)&&imp.corsi.length>0){
+        const belongs=imp.corsi.some(c=>currentCdsCods.has((c.codice||c.extCode||'').toUpperCase()));
+        if(!belongs) continue;
+      }
+
+      const start=parseCinecaDate(imp.dataInizio);
+      const end=parseCinecaDate(imp.dataFine);
+
+      // Estrai partizione (es. "CORSO A", "CORSO B") se presente
+      const dettagli=(imp.evento?.dettagliDidattici||[])[0];
+      const partizione=dettagli?.partizione?.descrizione||'';
+
+      lessons.push({
+        eventName,
+        aulaNome:imp._aulaNome||'—',
+        poloName:imp._polo||poloName,
+        start,end,
+        partizione,
+        docenti:matchingProfs.map(d=>{
+          const cog=(d.cognome||d.des?.split(' ')[0]||'').trim();
+          const nom=(d.nome||(d.des?.split(' ').slice(1).join(' '))||'').trim();
+          return{cognome:cog,nome:nom};
+        })
+      });
+    }
+  });
+
+  // Merge consecutive lessons (same aula, gap ≤ 1 minute) — port of Dart logic
+  const merged=mergeLessons(lessons);
+
+  renderOrario(container,merged,mon,sun,weekLabel,corsBlocked&&lessons.length===0);
+}
+
+function mergeLessons(lessons){
+  // Group by aula+event, sort by start, merge consecutive
+  const key=l=>`${l.aulaNome}||${l.eventName}||${l.docenti.map(d=>d.cognome).join(',')}`;
+  const groups={};
+  for(const l of lessons){
+    const k=key(l);
+    if(!groups[k]) groups[k]=[];
+    groups[k].push(l);
+  }
+  const out=[];
+  for(const grp of Object.values(groups)){
+    grp.sort((a,b)=>a.start-b.start);
+    let cur={...grp[0]};
+    for(let i=1;i<grp.length;i++){
+      const gap=(grp[i].start-cur.end)/60000;
+      if(gap<=1){
+        if(grp[i].end>cur.end) cur={...cur,end:grp[i].end};
+      } else {
+        out.push(cur);
+        cur={...grp[i]};
+      }
+    }
+    out.push(cur);
+  }
+  return out;
+}
+
+function weekNavHtml(label){
+  return`<div class="week-nav">
+    <button class="wnav-btn" id="wnav-prev" title="Settimana precedente">&#8592;</button>
+    <button class="wnav-today" id="wnav-today">Oggi</button>
+    <button class="wnav-btn" id="wnav-next" title="Settimana successiva">&#8594;</button>
+    <div class="week-range">${label}</div>
+  </div>`;
+}
+
+function attachNavListeners(){
+  document.getElementById('wnav-prev')?.addEventListener('click',()=>{schedOffset--;loadOrario();});
+  document.getElementById('wnav-next')?.addEventListener('click',()=>{schedOffset++;loadOrario();});
+  document.getElementById('wnav-today')?.addEventListener('click',()=>{schedOffset=0;loadOrario();});
+}
+
+function renderOrario(container,lessons,weekStart,weekEnd,weekLabel,corsErr){
+  const DAYS=['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
+  const DAY_SHORT=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+  const fmtTime=d=>d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+
+  // ── Raggruppa per materia (eventName) ──
+  const byMateria={};
+  for(const l of lessons){
+    const key=l.eventName||'Lezione';
+    if(!byMateria[key]) byMateria[key]={eventName:key,docenti:l.docenti,sessions:[]};
+    const dow=l.start.getDay(); // 0=Sun
+    const idx=dow===0?6:dow-1;  // Mon=0…Sun=6
+    byMateria[key].sessions.push({
+      dayIdx:idx,
+      start:l.start,
+      end:l.end,
+      aulaNome:l.aulaNome,
+      poloName:l.poloName,
+      partizione:l.partizione||'',
+    });
+  }
+
+  // Ordina le materie alfabeticamente, le sessioni per giorno+ora
+  const materieList=Object.values(byMateria).sort((a,b)=>a.eventName.localeCompare(b.eventName,'it'));
+  materieList.forEach(m=>{
+    m.sessions.sort((a,b)=>a.dayIdx-b.dayIdx||a.start-b.start);
+    // Deduplicazione: rimuovi solo sessioni identiche (stesso giorno+ora+aula+partizione)
+    const deduped=[];
+    for(const s of m.sessions){
+      const dup=deduped.find(p=>
+        p.dayIdx===s.dayIdx&&
+        Math.abs(p.start-s.start)<60000&&
+        p.aulaNome===s.aulaNome&&
+        p.partizione===s.partizione
+      );
+      if(!dup) deduped.push({...s});
+    }
+    m.sessions=deduped;
+  });
+
+  let cardsHtml='';
+  for(const m of materieList){
+    const profStr=m.docenti.map(d=>`${cw(d.cognome||'')} ${cw(d.nome||'')}`.trim()).filter(Boolean).join(', ')||'—';
+    const sessionsHtml=m.sessions.map(s=>`
+      <div class="sched-session">
+        <div class="sched-session-day">${DAY_SHORT[s.dayIdx]}</div>
+        <div class="sched-session-time">${fmtTime(s.start)} <span>→ ${fmtTime(s.end)}</span></div>
+        <div class="sched-session-aula">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${esc(s.aulaNome)} · <span style="color:var(--faint)">${esc(s.poloName)}</span>
+          ${s.partizione?`<span style="margin-left:8px;font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:var(--surface2);color:var(--muted)">${esc(s.partizione)}</span>`:''}
+        </div>
+      </div>`).join('');
+    cardsHtml+=`
+      <div class="sched-materia-card">
+        <div class="sched-materia-head">
+          <div class="sched-materia-accent"></div>
+          <div>
+            <div class="sched-materia-title">${esc(m.eventName)}</div>
+            <div class="sched-materia-prof">${esc(profStr)}</div>
+          </div>
+        </div>
+        <div class="sched-materia-sessions">${sessionsHtml}</div>
+      </div>`;
+  }
+
+  let mainContent;
+  if(corsErr){
+    mainContent=`<div class="sched-cors-err">
+      <strong>⚠️ Impossibile raggiungere l'API Cineca dal browser (CORS bloccato).</strong><br><br>
+      Le API di <code>unipi.prod.up.cineca.it</code> non accettano richieste dirette dal browser.
+      Per risolvere, aggiungi un route proxy nel tuo Cloudflare Worker che inoltra le chiamate a
+      <code>/cineca/*</code> → <code>https://unipi.prod.up.cineca.it/api/*</code>,
+      poi cambia <code>CIN_BASE</code> in cima allo script con l'URL del tuo proxy.
+    </div>`;
+  } else if(!cardsHtml){
+    mainContent=`<div class="sched-empty">
+      <strong>Nessuna lezione trovata</strong>
+      Nessuna lezione dei docenti di questo corso per la settimana selezionata.<br>
+      Prova a navigare alle settimane in cui si svolgono le lezioni.
+    </div>`;
+  } else {
+    mainContent=cardsHtml;
+  }
+
+  container.innerHTML=weekNavHtml(weekLabel)+mainContent;
+  attachNavListeners();
+}
+
+/* ═══════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════ */
+// Parsa il campo 'des' di Cineca (es. "DEL CORSO GIANNA MARIA") in {cognome, nome}
+// Le particelle/prefissi nobiliari fanno parte del cognome
+const PARTICELLE=new Set(['DI','DE','DEL','DELLA','DEGLI','DELLE','DAL','DALLA','DALLE','D','LO','LA','LE','LI','DA','IN','VAN','VON','DEGLI']);
+function parseDes(des){
+  if(!des) return{cognome:'',nome:''};
+  const parts=des.trim().split(' ').filter(Boolean);
+  if(parts.length===0) return{cognome:'',nome:''};
+  if(parts.length===1) return{cognome:parts[0],nome:''};
+  // Se il primo token è una particella, cognome = token[0] + token[1]
+  if(PARTICELLE.has(parts[0].toUpperCase())){
+    return{cognome:parts.slice(0,2).join(' '),nome:parts.slice(2).join(' ')};
+  }
+  return{cognome:parts[0],nome:parts.slice(1).join(' ')};
+}
+
+function g(id){return document.getElementById(id)}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function cap1(s){return s?s.charAt(0).toUpperCase()+s.slice(1).toLowerCase():''}
+function cw(s){return s?s.split(' ').map(w=>w?w.charAt(0).toUpperCase()+w.slice(1).toLowerCase():'').join(' '):''}
+function hl(t,q){if(!q)return esc(t);const i=t.toLowerCase().indexOf(q);if(i<0)return esc(t);return esc(t.slice(0,i))+'<strong style="color:var(--accent)">'+esc(t.slice(i,i+q.length))+'</strong>'+esc(t.slice(i+q.length));}
+function clearMsg(){g('ma').innerHTML=''}
+function showMsg(cls,html){g('ma').innerHTML=`<div class="msg ${cls}">${html}</div>`;}
+</script>
+</body>
+</html>
